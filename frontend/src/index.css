@@ -1,0 +1,53 @@
+body,
+html {
+  overscroll-behavior: none;
+  position: relative;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+#root {
+  background-color: white;
+  width: 100vw;
+  height: auto;
+  position: relative;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.textshadow {
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.85));
+}
+.textshadow1 {
+  filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.45));
+}
+@media (max-width: 640px) {
+  body,
+  html {
+    font-size: 15px;
+  }
+  .textshadow {
+    filter: drop-shadow(1.5px 1.5px 0px rgba(0, 0, 0, 0.85));
+  }
+}
+@media (min-width: 641px) and (max-width: 1024px) {
+  body,
+  html {
+    font-size: 16px;
+  }
+}
+@media (min-width: 1025px) {
+  body,
+  html {
+    font-size: 17px;
+  }
+}
+input:-webkit-autofill {
+  box-shadow: 0 0 0 1000px #f4f4f5 inset !important;
+  -webkit-text-fill-color: #18181b !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
