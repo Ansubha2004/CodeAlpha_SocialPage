@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
         trim: true,
-        lowercase: trusted,
+        lowercase: true,
     },
     email: {
         type: String,
@@ -31,9 +31,11 @@ const userSchema = new mongoose.Schema({
     },
     profileimage: {
         type: String,
+        default:""
     },
     imageId: {
-        type: String
+        type: String,
+        default:""
     }
 }, { timestamps: true });
 

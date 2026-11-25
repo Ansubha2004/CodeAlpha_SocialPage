@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectDB from "./config/db.js";
+import authroutes from "./routes/authroutes.js";
 
 dotenv.config();
 connectDB();
@@ -25,6 +26,8 @@ app.use(cookieParser());
 app.get('/',(req,res)=>{
     res.send('Picyfi Backend is Running');
 });
+
+app.use("/authapi",authroutes);
 
 
 app.use((req,res)=>{
