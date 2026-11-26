@@ -198,3 +198,37 @@ export const updateprofile = async (req, res) => {
         });
     }
 }
+
+//search user
+export const searchuser=async (req,res)=>{
+   try{
+    const {search}=req.query;
+    if (!search || !search.trim()) {
+        return res.json({
+          success: true,
+          message:"No search",
+          users: [],
+        });
+      };
+      const users = await usermodel.find({
+        $or: [
+          { username: { $regex: search.trim(), $options: "i" } },
+          { name: { $regex: search.trim(), $options: "i" } }
+        ],
+      }).select("-password -imageId").limit(30);
+      return res.json({
+        success: true,
+        message:"Found",
+        users,
+      });
+   }
+   catch(error)
+   {
+    return res.json({
+        success:false,
+        message:"Not found",
+        error
+    })
+   }
+
+}
