@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectDB from "./config/db.js";
 import authroutes from "./routes/authroutes.js";
-
+import followroutes from "./routes/followroutes.js"
 dotenv.config();
 connectDB();
 
@@ -28,6 +28,7 @@ app.get('/',(req,res)=>{
 });
 
 app.use("/authapi",authroutes);
+app.use("/followapi",followroutes);
 
 
 app.use((req,res)=>{
