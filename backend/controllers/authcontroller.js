@@ -2,6 +2,7 @@ import usermodel from "../models/usermodel.js"
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import dotenv from 'dotenv';
+import cloudinary from "../config/cloudinary.js";
 dotenv.config();
 
 
@@ -50,8 +51,8 @@ const cookieOptions = {
     maxAge: 24 * 60 * 60 * 1000,
     path: "/"
 };
-export const login = async (req, res) => { 
-    try{
+export const login = async (req, res) => {
+    try {
         const { email, password } = req.body;
         const finduser = await usermodel.findOne({ email });
         if (!finduser) {
@@ -71,24 +72,23 @@ export const login = async (req, res) => {
             id: finduser._id,
             email: finduser.email,
             name: finduser.name,
-            username:finduser.username
+            username: finduser.username
         }, process.env.JWT_SECRET);
         res.cookie('token', token, cookieOptions)
         return res.json({ success: true, message: "User logged in successfully", user: finduser });
 
     }
-    catch(error)
-    {
+    catch (error) {
         return res.json({
-            success:false,
-            message:"Login issue",
+            success: false,
+            message: "Login issue",
             error
         })
     }
 };
 
-export const logout = async (req, res) => { 
-    try{
+export const logout = async (req, res) => {
+    try {
         res.clearCookie("token", cookieOptions);
 
         return res.status(200).json({
@@ -96,41 +96,105 @@ export const logout = async (req, res) => {
             message: "Logout successful"
         });
     }
-    catch(error)
-    {
+    catch (error) {
         return res.json({
-            success:false,
-            message:"Issue in logout",
+            success: false,
+            message: "Issue in logout",
             error
         })
     }
 };
 
 export const profile = async (req, res) => {
-    try{
+    try {
         const user = await usermodel
-        .findById(req.user.id)
-        .select("-password");
-  
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "User not found",
+            .findById(req.user.id)
+            .select("-password");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: user,
         });
-      }
-  
-      return res.status(200).json({
-        success: true,
-        data: user,
-      });
-  
+
     }
-    catch(error)
-    {
+    catch (error) {
         return res.json({
-            success:false,
-            message:"Error fetching profile",
+            success: false,
+            message: "Error fetching profile",
             error
         })
     }
 };
+
+export const updateprofile = async (req, res) => {
+    try {
+        const { username, bio } = req.body;
+        const user = await usermodel.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+        if (username) {
+            const existinguser = await usermodel.findOne({
+                username: username.toLowerCase().trim(),
+                _id: { $ne: req.user.id }
+            });
+
+            if (existinguser) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Username already exists"
+                });
+            }
+
+            user.username = username.toLowerCase().trim();
+        }
+        if (bio !== undefined) {
+            user.bio = bio;
+        }
+        if (req.file) {
+            const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+            const result = await cloudinary.uploader.upload(base64Image, {
+                folder: "picyfi_profilepic",
+            });
+            const oldImageId = user.imageId;
+
+            user.profileimage = result.secure_url;
+            user.imageId = result.public_id;
+
+            
+
+            if (oldImageId) {
+                await cloudinary.uploader.destroy(oldImageId);
+            }
+        }
+        await user.save();
+        return res.json({
+            success: true,
+            message: "Profile updated successfully",
+            user
+        });
+    }
+    catch (error) {
+        console.error("FULL CLOUDINARY ERROR:");
+        console.error(error);
+        console.error("Message:", error.message);
+        console.error("HTTP Code:", error.http_code);
+        console.error("Nested error:", error.error);
+    
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update profile",
+            error: error.message
+        });
+    }
+}
