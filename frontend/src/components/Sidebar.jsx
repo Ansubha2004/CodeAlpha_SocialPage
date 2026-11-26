@@ -22,7 +22,7 @@ function Sidebar({user,setUser,url}) {
     },
     {
       name: "Explore",
-      path: "/explore",
+      path: "/",
       icon: Search,
     },
     {
@@ -76,11 +76,12 @@ function Sidebar({user,setUser,url}) {
             <NavLink
               key={item.name}
               to={item.path}
+              state={item.name === "Explore" ? { focusSearch: true } : null}
               end={item.path === "/"}
               className={({ isActive }) =>
                 clsx(
                   "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200",
-                  isActive
+                  item.name!=="Explore" && isActive
                     ? "bg-indigo-100 text-indigo-700"
                     : "text-gray-700 hover:bg-gray-100",
                 )

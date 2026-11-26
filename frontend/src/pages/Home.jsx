@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useState,useEffect,useRef} from "react";
 import {
   Search,
   Heart,
@@ -6,8 +6,45 @@ import {
   Bookmark,
   MoreHorizontal,
 } from "lucide-react";
+import {useNavigate,useLocation} from "react-router-dom";
+import axios from "axios";
 
-function Home({user}) {
+function Home({user,url}) {
+  const [search, setSearch] = useState("");
+  const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
+
+  const openProfile = (id) => {
+    user._id===id?navigate("/profile"):navigate(`/profile/${id}`);
+    setSearch("");
+    setUsers([]);
+  };
+  const location = useLocation();
+const searchRef = useRef(null);
+
+  useEffect(() => {
+    if (location.state?.focusSearch) {
+      searchRef.current?.focus();
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+  
+  const handlesearch=async (e)=>{
+    const value = e.target.value;
+    setSearch(value);
+    try {
+      const result = await axios.get(`${url}/authapi/searchuser`, {
+        params: { search: value },
+        withCredentials: true,
+      });
+
+      if (result.data.success) {
+        setUsers(result.data.users);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
   return (
     <section
       id="Home"
@@ -19,10 +56,49 @@ function Home({user}) {
 
           <input
             type="text"
+            ref={searchRef}
+            value={search}
+            onChange={handlesearch}
             placeholder="Search users..."
             className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
           />
         </div>
+        {/* Search results */}
+        {search.trim() && (
+          <div className="absolute left-5 right-5 top-[85%] bg-white rounded-xl shadow-lg border border-gray-100 max-h-80 overflow-y-auto">
+            {users.length > 0 ? (
+              users.map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => openProfile(item._id)}
+                  className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-100"
+                >
+                  <img
+                    src={
+                      item.profileimage ||
+                      "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                    }
+                    alt="Profile"
+                    className="w-11 h-11 rounded-full object-cover"
+                  />
+
+                  <div>
+                    <h3 className="font-semibold text-sm text-gray-900">
+                      {item.username}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {item.name}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="p-4 text-sm text-gray-500 text-center">
+                No users found
+              </p>
+            )}
+          </div>
+        )}
       </div>
       <div className="w-full grid grid-cols-2 gap-5 ">
         {[1, 2,3,4,5].map((post, index) => (

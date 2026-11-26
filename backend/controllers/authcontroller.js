@@ -232,3 +232,34 @@ export const searchuser=async (req,res)=>{
    }
 
 }
+
+//get user profile 
+export const getuserprofile=async (req,res)=>{
+    try{
+        const { id } = req.params;
+
+    const user = await usermodel.findById(id)
+      .select("-password -imageId");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message:"fetched user detail",
+      user,
+    });
+    }
+    catch(error)
+    {
+        return res.json({
+            success:false,
+            message:"Error fetching user details",
+            error
+        })
+    }
+}

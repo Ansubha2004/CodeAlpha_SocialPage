@@ -10,6 +10,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Profile from "./pages/Profile.jsx";
 import Editprofile from "./pages/Editprofile.jsx";
+import UserProfile from "./pages/UserProfile.jsx";
 
 
 function App() {
@@ -57,8 +58,8 @@ function App() {
             <Route
               path="/"
               element={
-                <ProtectedRoute user={user} loading={loading}>
-                  <Home user={user} />
+                <ProtectedRoute user={user}  loading={loading}>
+                  <Home user={user} url={url} />
                 </ProtectedRoute>
               }
             />
@@ -67,6 +68,14 @@ function App() {
               element={
                 <ProtectedRoute user={user} loading={loading}>
                   <Profile user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/:id"
+              element={
+                <ProtectedRoute user={user} loading={loading}>
+                  <UserProfile user={user} url={url} />
                 </ProtectedRoute>
               }
             />
