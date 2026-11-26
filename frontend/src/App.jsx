@@ -8,11 +8,15 @@ import PublicRoute from "./components/PublicRoute.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import Profile from "./pages/Profile.jsx";
+import Editprofile from "./pages/Editprofile.jsx";
+
 
 function App() {
+  const deafultdp="https://lovemine.in/wp-content/uploads/2024/05/no-dp_16-300x300.webp";
   const navigate = useNavigate();
   const url = import.meta.env.VITE_API_URL;
-  const [loading,setLoading]=useState(true);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
   const refreshUser = async () => {
@@ -58,8 +62,38 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/login" element={<Login  refreshUser={refreshUser} />} />
-            <Route path="/register" element={<Register  refreshUser={refreshUser}  />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute user={user} loading={loading}>
+                  <Profile user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/editprofile"
+              element={
+                <ProtectedRoute user={user} loading={loading}>
+                  <Editprofile user={user} url={url} setUser={setUser} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <PublicRoute user={user} loading={loading}>
+                  <Login refreshUser={refreshUser} />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <PublicRoute user={user} loading={loading}>
+                  <Register refreshUser={refreshUser} />
+                </PublicRoute>
+              }
+            />
           </Routes>
         </main>
       </div>

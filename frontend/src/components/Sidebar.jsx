@@ -96,7 +96,7 @@ function Sidebar({user,setUser,url}) {
       <div className="mt-auto w-full mb-3">
         <div className="flex items-center gap-1 px- mb-2 min-w-0">
           <img
-            src="https://i.pravatar.cc/150?img=47"
+            src={user.profileimage}
             alt="Profile"
             className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm cursor-pointer"
           />
