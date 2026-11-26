@@ -1,11 +1,10 @@
-import React,{useState,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Camera } from "lucide-react";
-import {useNavigate,useParams} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
-
-function UserProfile({ user,url }) {
-  const navigate=useNavigate();
+function UserProfile({ user, url }) {
+  const navigate = useNavigate();
   const demoPosts = [
     "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=500",
     "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=500",
@@ -13,26 +12,98 @@ function UserProfile({ user,url }) {
   ];
 
   const posts = demoPosts.map((image, index) => ({
-        _id: index,
-        image,
-      }));
+    _id: index,
+    image,
+  }));
 
-  const followers =  1200;
-  const following = 180;
+  const [followers, setFollowers] = useState([]);
+  const [followings, setFollowings] = useState([]);
+  const [isFollowing, setIsFollowing] = useState(false);
   const [profile, setProfile] = useState(null);
 
+  const fetchfollowerdata = async (id) => {
+    try {
+      const followerresult = await axios.get(
+        `${url}/followapi/getfollowers/${id}`,
+        { withCredentials: true },
+      );
+      const followingresult = await axios.get(
+        `${url}/followapi/getfollowings/${id}`,
+        { withCredentials: true },
+      );
+      if (followerresult.data.success) {
+        setFollowers(followerresult.data.followers);
+      }
+
+      if (followingresult.data.success) {
+        setFollowings(followingresult.data.followings);
+      }
+    } catch (error) {
+      console.log("Error fetching followers followings,", error);
+      return;
+    }
+  };
+
+  const handlefollow = async () => {
+    try {
+      const result = await axios.post(
+        `${url}/followapi/follow/${profile._id}`,
+        {},
+        { withCredentials: true },
+      );
+      if (result.data.success) {
+        setIsFollowing(true);
+        await fetchfollowerdata(profile._id);
+      }
+    } catch (error) {
+      console.log("Follow request failed ", error);
+      return;
+    }
+  };
+
+
+  const handleunfollow = async () => {
+    try {
+      const result = await axios.delete(
+        `${url}/followapi/unfollow/${profile._id}`,
+        { withCredentials: true },
+      );
+      if (result.data.success) {
+        setIsFollowing(false);
+        await fetchfollowerdata(profile._id);
+      }
+    } catch (error) {
+      console.log("UnFollow request failed ", error);
+      return;
+    }
+  };
+  const checkfollow = async (id) => {
+    try {
+      const result = await axios.get(
+        `${url}/followapi/checkfollow/${id}`,
+        { withCredentials: true }
+      );
+  
+      if (result.data.success) {
+        setIsFollowing(result.data.isFollowing);
+      }
+    } catch (error) {
+      console.log("Check follow error:", error);
+    }
+  };
 
   const { id } = useParams();
   useEffect(() => {
     const fetchprofile = async () => {
       try {
-        const result = await axios.get(
-          `${url}/authapi/profile/${id}`,
-          { withCredentials: true }
-        );
+        const result = await axios.get(`${url}/authapi/profile/${id}`, {
+          withCredentials: true,
+        });
 
         if (result.data.success) {
           setProfile(result.data.user);
+          await fetchfollowerdata(result.data.user._id);
+          await  checkfollow(result.data.user._id);
         }
       } catch (error) {
         console.log(error);
@@ -69,30 +140,35 @@ function UserProfile({ user,url }) {
                 {profile.username}
               </h2>
 
-              <button className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
-                Follow
+              <button
+                onClick={isFollowing ? handleunfollow : handlefollow}
+                className={`min-w-[110px] rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-95 ${
+                  isFollowing
+                    ? "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                    : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
+                }`}
+              >
+                {isFollowing ? "Unfollow" : "Follow"}
               </button>
             </div>
 
             <div className="mt-3 flex gap-40 text-center">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  { 12}
-                </h3>
+                <h3 className="text-lg font-bold text-gray-900">{12}</h3>
                 <p className="text-sm text-gray-500">Posts</p>
               </div>
 
-              <div>
+              <div className="cursor-pointer" onClick={()=>navigate(`/followerpage/${profile._id}?tab=follower`)}>
                 <h3 className="text-lg font-bold text-gray-900">
-                  {followers >= 1000
-                    ? (followers / 1000).toFixed(1) + "K"
-                    : followers}
+                  {followers.length}
                 </h3>
                 <p className="text-sm text-gray-500">Followers</p>
               </div>
 
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">{following}</h3>
+              <div className="cursor-pointer" onClick={()=>navigate(`/followerpage/${profile._id}?tab=following`)}>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {followings.length}
+                </h3>
                 <p className="text-sm text-gray-500">Following</p>
               </div>
             </div>

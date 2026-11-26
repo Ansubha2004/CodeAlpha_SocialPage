@@ -106,7 +106,7 @@ function Editprofile({ user, url ,setUser }) {
                   name="bio"
                   value={editformdata.bio}
                   onChange={handleChange}
-                  rows="1"
+                  rows="5"
                   className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm text-gray-800 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                   placeholder="Write something about yourself"
                 />

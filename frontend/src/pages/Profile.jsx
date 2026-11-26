@@ -1,10 +1,12 @@
-import React from "react";
+import React,{useState,useEffect} from "react";
 import { Camera } from "lucide-react";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-
-function Profile({ user }) {
-  const navigate=useNavigate();
+function Profile({ user,url }) {
+  const navigate = useNavigate();
+  const [followers, setFollowers] = useState([]);
+  const [followings, setFollowings] = useState([]);
   const demoPosts = [
     "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=500",
     "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=500",
@@ -18,8 +20,32 @@ function Profile({ user }) {
         image,
       }));
 
-  const followers = user?.followers?.length || 1200;
-  const following = user?.following?.length || 180;
+  const fetchfollowerdata = async (id) => {
+    try {
+      const followerresult = await axios.get(
+        `${url}/followapi/getfollowers/${id}`,
+        { withCredentials: true },
+      );
+      const followingresult = await axios.get(
+        `${url}/followapi/getfollowings/${id}`,
+        { withCredentials: true },
+      );
+      if (followerresult.data.success) {
+        setFollowers(followerresult.data.followers);
+      }
+
+      if (followingresult.data.success) {
+        setFollowings(followingresult.data.followings);
+      }
+    } catch (error) {
+      console.log("Error fetching followers followings,", error);
+      return;
+    }
+  };
+
+  useEffect(()=>{
+    fetchfollowerdata(user._id);
+  },[url])
 
   return (
     <section
@@ -44,7 +70,10 @@ function Profile({ user }) {
                 {user.username}
               </h2>
 
-              <button onClick={()=>navigate("/editprofile")}  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
+              <button
+                onClick={() => navigate("/editprofile")}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
+              >
                 Edit Profile
               </button>
             </div>
@@ -57,17 +86,17 @@ function Profile({ user }) {
                 <p className="text-sm text-gray-500">Posts</p>
               </div>
 
-              <div>
+              <div className="cursor-pointer" onClick={()=>navigate(`/followerpage/${user._id}?tab=follower`)} >
                 <h3 className="text-lg font-bold text-gray-900">
-                  {followers >= 1000
-                    ? (followers / 1000).toFixed(1) + "K"
-                    : followers}
+                  {followers.length}
                 </h3>
                 <p className="text-sm text-gray-500">Followers</p>
               </div>
 
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">{following}</h3>
+              <div className="cursor-pointer" onClick={()=>navigate(`/followerpage/${user._id}?tab=following`)}>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {followings.length}
+                </h3>
                 <p className="text-sm text-gray-500">Following</p>
               </div>
             </div>

@@ -46,78 +46,92 @@ export const followuser = async (req, res) => {
             error
         })
     }
-}   
+}
 
-export const unfollowuser=async (req,res)=>{
-    try{
-        const {id}=req.params;
-        const unfollow=await followmodel.findOneAndDelete({
-            follower:req.user.id,
-            following:id
+export const unfollowuser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const unfollow = await followmodel.findOneAndDelete({
+            follower: req.user.id,
+            following: id
         });
         if (!unfollow) {
             return res.json({
-              success: false,
-              message: "You are not following this user",
+                success: false,
+                message: "You are not following this user",
             });
-          }
-      
-          return res.json({
+        }
+
+        return res.json({
             success: true,
             message: "User unfollowed successfully",
-          });
+        });
     }
-    catch(error)
-    {
+    catch (error) {
         return res.json({
-            success:false,
-            message:"Failed to unfollow",
+            success: false,
+            message: "Failed to unfollow",
             error
         })
     }
 }
 
-export const getfollowers=async (req,res)=>{
-    try
-    {
-        const {id}=req.params;
-        const followers=await followmodel.find({
-            following:id
-        }).populate("follower","-password -imageId");
+export const getfollowers = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const followers = await followmodel.find({
+            following: id
+        }).populate("follower", "-password -imageId");
         return res.json({
             success: true,
-            message:"followers retrienved",
-            followers,
-          });
+            message: "followers retrienved",
+            followers
+        });
     }
-    catch(error)
-    {
+    catch (error) {
         return res.json({
-            success:false,
-            message:"Failed to get followers",
+            success: false,
+            message: "Failed to get followers",
             error
         })
     }
 }
-export const getfollowings=async (req,res)=>{
-    try
-    {
-        const {id}=req.params;
-        const followings=await followmodel.find({
-            follower:id
-        }).populate("following","-password -imageId");
+export const getfollowings = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const followings = await followmodel.find({
+            follower: id
+        }).populate("following", "-password -imageId");
         return res.json({
             success: true,
-            message:"followings retrienved",
-            followings,
-          });
+            message: "followings retrienved",
+            followings
+        });
     }
-    catch(error)
-    {
+    catch (error) {
         return res.json({
-            success:false,
-            message:"Failed to get followings",
+            success: false,
+            message: "Failed to get followings",
             error
         })
+    }
+}
+
+
+export const checkfollow = async (req, res) => {
+    try { 
+        const {id}=req.params;
+        const existingfollow = await followmodel.findOne({
+            follower: req.user.id,
+            following: id,
+          });
+      
+          return res.json({
+            success: true,
+            isFollowing: !!existingfollow
+          });
+    }
+    catch (error) {
+        return res.json({ success: false, message: "error to check whether following", error });
     }
 }
