@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Camera } from "lucide-react";
+import { Camera,Heart,MessageCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -119,6 +119,48 @@ function UserProfile({ user, url }) {
 
     fetchprofile();
   }, [id, url]);
+  const getTimeAgo = (date) => {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+
+    if (seconds < 60) return "Just now";
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo ago`;
+
+    const years = Math.floor(months / 12);
+    return `${years}y ago`;
+  };
+  const likepost = async (id) => {
+    try {
+      const result = await axios.put(
+        `${url}/postapi/likepost/${id}`,
+        {},
+        {
+          withCredentials: true,
+        },
+      );
+      if (result.data.success) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post._id === id ? { ...post, likes: result.data.likes } : post,
+          ),
+        );
+      }
+    } catch (error) {
+      console.log("Error in Like or dislke", error);
+      return;
+    }
+  };
+
 
   if (!profile) {
     return <p className="p-5">Loading profile...</p>;
@@ -190,18 +232,65 @@ function UserProfile({ user, url }) {
         <p className="px-5 text-2xl my-5 font-bold ">POSTS</p>
         <div className=" grid grid-cols-3 gap-2 sm:gap-3">
           {posts.length > 0 ? (
-            posts.map((post, index) => (
-              <div
-                key={post._id || index}
-                className="aspect-square overflow-hidden rounded-lg bg-gray-200"
-              >
-                <img
-                  src={typeof post === "string" ? post : post.image}
-                  alt={`Post ${index + 1}`}
-                  className="h-full w-full object-cover transition duration-300 hover:scale-105"
-                />
-              </div>
-            ))
+            posts.map((post, index) => {
+              const isLiked = post.likes.some(
+                (id) => id.toString() === user._id.toString(),
+              );
+              return (
+                <div className="bg-white w-full rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="text-sm text-gray-500">
+                          {`Posted ${getTimeAgo(post.createdAt)}`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full overflow-hidden rounded-xl">
+                    <img
+                      src={post.image}
+                      className="w-full h-[260px] md:h-[350px] object-cover"
+                    />
+                  </div>
+                  <div className="px-2 mt-3 flex items-center gap-2 flex-wrap">
+                    <p className="text-xs font-semibold uppercase text-gray-400 shrink-0">
+                      Caption:
+                    </p>
+                    <p className="text-sm text-gray-700 break-words">
+                      {post.caption}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center gap-8">
+                      <button
+                        onClick={() => likepost(post._id)}
+                        className={`flex items-center gap-2 transition ${
+                          isLiked
+                            ? "text-red-500"
+                            : "text-gray-700 hover:text-red-500"
+                        }`}
+                      >
+                        <Heart
+                          size={27}
+                          strokeWidth={2}
+                          fill={isLiked ? "currentColor" : "none"}
+                        />
+                        <span className="text-sm font-medium">
+                          {post.likes.length}
+                        </span>
+                      </button>
+                      <button className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition">
+                        <MessageCircle size={27} strokeWidth={2} />
+                        <span className="text-sm font-medium">
+                          {post.comments.length}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
           ) : (
             <div className="col-span-3 flex flex-col items-center justify-center py-16">
               <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-gray-300">

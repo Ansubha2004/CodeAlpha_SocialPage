@@ -15,13 +15,36 @@ function Home({ user, url }) {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
 
+  const likepost = async (id) => {
+    try {
+      const result = await axios.put(
+        `${url}/postapi/likepost/${id}`,
+        {},
+        {
+          withCredentials: true,
+        },
+      );
+      if (result.data.success) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post._id === id
+              ? { ...post, likes: result.data.likes }
+              : post
+          )
+        );
+      }
+    } catch (error) {
+      console.log("Error in Like or dislke", error);
+      return;
+    }
+  };
+
   const getallposts = async () => {
     try {
       const result = await axios.get(`${url}/postapi/getallposts/${user._id}`, {
         withCredentials: true,
       });
       if (result.data.success) {
-        console.log(result.data.posts);
         setPosts(result.data.posts);
       }
     } catch (error) {
@@ -48,10 +71,8 @@ function Home({ user, url }) {
       if (result.data.success) {
         setPosts((prevPosts) =>
           prevPosts.map((post) =>
-            post.user._id === id
-              ? { ...post, isFollowing: true }
-              : post
-          )
+            post.user._id === id ? { ...post, isFollowing: true } : post,
+          ),
         );
       }
     } catch (error) {
@@ -59,7 +80,6 @@ function Home({ user, url }) {
       return;
     }
   };
-
 
   useEffect(() => {
     if (location.state?.focusSearch) {
@@ -160,7 +180,11 @@ function Home({ user, url }) {
         )}
       </div>
       <div className="w-full grid grid-cols-2 gap-5 ">
-        {posts.map((post, index) => (
+      {posts.map((post, index) =>{ 
+           const isLiked = post.likes.some(
+            (id) => id.toString() === user._id.toString()
+          );
+          return (
           <div className="bg-white w-full rounded-2xl border border-gray-100 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -183,7 +207,13 @@ function Home({ user, url }) {
               </div>
 
               <button
-                onClick={() => post.user._id !== user._id?post.isFollowing?navigate(`/profile/${post.user._id}`):handlefollow(post.user._id):navigate("/profile")}
+                onClick={() =>
+                  post.user._id !== user._id
+                    ? post.isFollowing
+                      ? navigate(`/profile/${post.user._id}`)
+                      : handlefollow(post.user._id)
+                    : navigate("/profile")
+                }
                 className={`px-4 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
                   post.user._id === user._id || post.isFollowing
                     ? "bg-gray-100 text-gray-700  hover:bg-gray-200"
@@ -211,13 +241,26 @@ function Home({ user, url }) {
             </div>
             <div className="flex items-center justify-between mt-4">
               <div className="flex items-center gap-8">
-                <button className="flex items-center gap-2 text-gray-700 hover:text-red-500 transition">
-                  <Heart size={27} strokeWidth={2} />
-                  <span className="text-sm font-medium">124</span>
+                <button
+                  onClick={() => likepost(post._id)}
+                  className={`flex items-center gap-2 transition ${
+                    isLiked
+                      ? "text-red-500"
+                      : "text-gray-700 hover:text-red-500"
+                  }`}
+                >
+                  <Heart
+                    size={27}
+                    strokeWidth={2}
+                    fill={isLiked ? "currentColor" : "none"}
+                  />
+                  <span className="text-sm font-medium">
+                    {post.likes.length}
+                  </span>
                 </button>
                 <button className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition">
                   <MessageCircle size={27} strokeWidth={2} />
-                  <span className="text-sm font-medium">23</span>
+                  <span className="text-sm font-medium">{post.comments.length}</span>
                 </button>
               </div>
               <div
@@ -237,7 +280,7 @@ function Home({ user, url }) {
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </section>
   );

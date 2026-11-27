@@ -99,3 +99,72 @@ export const getallposts = async (req, res) => {
     });
   }
 };
+
+export const deletepost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const post = await postmodel.findById(id);
+    if (!post) {
+      return res.json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+    if (post.user.toString() !== req.user.id) {
+      return res.json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+    await postmodel.findByIdAndDelete(id);
+    return res.json({
+      success: true,
+      message: "Post deleted successfully",
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+
+export const likepost=async (req,res)=>{
+  try{
+    const {id}=req.params;
+    const userid=req.user.id;
+    const post=await postmodel.findById(id);
+    if(!post)
+    {
+      return res.json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    const existinglike=post.likes.includes(userid);
+    if (existinglike) {
+      post.likes.pull(userid);
+    } else {
+      post.likes.push(userid);
+    }
+
+    await post.save();
+
+    return res.json({
+      success:true,
+      message:existinglike?"Post Unliked":"Post Liked",
+      likes:post.likes,
+      isLiked:!!existinglike
+    })
+  }
+  catch(error)
+  {
+    return res.json({
+      success:false,
+      message:"Lik post api issue",
+      error:error.message
+    })
+  }
+}
