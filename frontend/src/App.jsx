@@ -12,6 +12,8 @@ import Profile from "./pages/Profile.jsx";
 import Editprofile from "./pages/Editprofile.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
 import Follower from "./pages/Follower.jsx";
+import Createpost from "./pages/Createpost.jsx";
+
 
 
 function App() {
@@ -93,6 +95,14 @@ function App() {
               element={
                 <ProtectedRoute user={user} loading={loading}>
                   <Follower user={user} url={url} setUser={setUser} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/createpost"
+              element={
+                <ProtectedRoute user={user} loading={loading}>
+                  <Createpost user={user} url={url} setUser={setUser} />
                 </ProtectedRoute>
               }
             />

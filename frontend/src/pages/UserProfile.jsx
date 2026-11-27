@@ -5,21 +5,27 @@ import axios from "axios";
 
 function UserProfile({ user, url }) {
   const navigate = useNavigate();
-  const demoPosts = [
-    "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=500",
-    "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=500",
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500",
-  ];
-
-  const posts = demoPosts.map((image, index) => ({
-    _id: index,
-    image,
-  }));
-
+  const [posts,setPosts]=useState([]);
   const [followers, setFollowers] = useState([]);
   const [followings, setFollowings] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [profile, setProfile] = useState(null);
+
+  
+  const fetchposts=async (id)=>{
+    try{
+      const result=await axios.get(`${url}/postapi/getuserposts/${id}`,{withCredentials:true});
+      if(result.data.success)
+      {
+        setPosts(result.data.posts);
+      }
+    }
+    catch(error)
+    {
+      console.log(error,"Failed to fetch acc posts");
+      return;
+    }
+  }
 
   const fetchfollowerdata = async (id) => {
     try {
@@ -104,6 +110,7 @@ function UserProfile({ user, url }) {
           setProfile(result.data.user);
           await fetchfollowerdata(result.data.user._id);
           await  checkfollow(result.data.user._id);
+          await fetchposts(result.data.user._id);
         }
       } catch (error) {
         console.log(error);
@@ -154,7 +161,7 @@ function UserProfile({ user, url }) {
 
             <div className="mt-3 flex gap-40 text-center">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">{12}</h3>
+                <h3 className="text-lg font-bold text-gray-900">{posts.length}</h3>
                 <p className="text-sm text-gray-500">Posts</p>
               </div>
 

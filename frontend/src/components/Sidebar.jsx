@@ -27,7 +27,7 @@ function Sidebar({user,setUser,url}) {
     },
     {
       name: "Create",
-      path: "/create",
+      path: "/createpost",
       icon: SquarePlus,
     },
     {

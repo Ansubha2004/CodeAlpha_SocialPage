@@ -7,18 +7,23 @@ function Profile({ user,url }) {
   const navigate = useNavigate();
   const [followers, setFollowers] = useState([]);
   const [followings, setFollowings] = useState([]);
-  const demoPosts = [
-    "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=500",
-    "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=500",
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500",
-  ];
+  
+  const [posts,setPosts]=useState([]);
 
-  const posts = user?.posts?.length
-    ? user.posts
-    : demoPosts.map((image, index) => ({
-        _id: index,
-        image,
-      }));
+  const fetchposts=async ()=>{
+    try{
+      const result=await axios.get(`${url}/postapi/getuserposts/${user._id}`,{withCredentials:true});
+      if(result.data.success)
+      {
+        setPosts(result.data.posts);
+      }
+    }
+    catch(error)
+    {
+      console.log(error,"Failed to fetch acc posts");
+      return;
+    }
+  }
 
   const fetchfollowerdata = async (id) => {
     try {
@@ -43,8 +48,10 @@ function Profile({ user,url }) {
     }
   };
 
+  
   useEffect(()=>{
     fetchfollowerdata(user._id);
+    fetchposts();
   },[url])
 
   return (
@@ -81,7 +88,7 @@ function Profile({ user,url }) {
             <div className="mt-3 flex gap-40 text-center">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">
-                  {user?.posts?.length || 12}
+                  {posts.length}
                 </h3>
                 <p className="text-sm text-gray-500">Posts</p>
               </div>

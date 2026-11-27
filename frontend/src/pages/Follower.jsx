@@ -4,7 +4,9 @@ import { useParams,useSearchParams,useNavigate } from "react-router-dom";
 
 function Follower({user,url}) {
     const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab")==="follower"?"follower":"following");
+    const [activeTab, setActiveTab] = useState(
+      searchParams.get("tab") === "follower" ? "followers" : "following"
+    );
   const { id } = useParams();
   const [followers, setFollowers] = useState([]);
   const [followings, setFollowings] = useState([]);
@@ -61,16 +63,13 @@ function Follower({user,url}) {
   }, [user?._id, url]);
   
   const currentUsers =
-    activeTab === "followers" ? followers : followings;
-
+  activeTab === "followers" ? followers : followings;
   return (
     <section
       id="Follower"
       className="min-h-screen w-full bg-[#fafbff] px-4 py-6 "
     >
       <div className="mx-auto w-[90%]">
-
-        {/* Tabs */}
         <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab("followers")}
@@ -116,8 +115,8 @@ function Follower({user,url}) {
 
                     <p className="text-xs text-gray-500">
                       {activeTab === "followers"
-                        ? "Follows you"
-                        : "Following"}
+                        ? `${item.username} was followed.....`
+                        : `${item.username} is following.....`}
                     </p>
                   </div>
                 </div>

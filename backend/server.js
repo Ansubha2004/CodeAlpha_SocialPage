@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import connectDB from "./config/db.js";
 import authroutes from "./routes/authroutes.js";
 import followroutes from "./routes/followroutes.js"
+import postroutes from "./routes/postroutes.js";
 dotenv.config();
 connectDB();
 
@@ -29,7 +30,7 @@ app.get('/',(req,res)=>{
 
 app.use("/authapi",authroutes);
 app.use("/followapi",followroutes);
-
+app.use("/postapi",postroutes);
 
 app.use((req,res)=>{
     res.status(404).json({

@@ -1,4 +1,4 @@
-import React,{useState,useEffect,useRef} from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Search,
   Heart,
@@ -6,30 +6,70 @@ import {
   Bookmark,
   MoreHorizontal,
 } from "lucide-react";
-import {useNavigate,useLocation} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-function Home({user,url}) {
+function Home({ user, url }) {
+  const [posts, setPosts] = useState([]);
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
 
+  const getallposts = async () => {
+    try {
+      const result = await axios.get(`${url}/postapi/getallposts/${user._id}`, {
+        withCredentials: true,
+      });
+      if (result.data.success) {
+        console.log(result.data.posts);
+        setPosts(result.data.posts);
+      }
+    } catch (error) {
+      console.log(error, "Error fetching all posts");
+      return;
+    }
+  };
+
   const openProfile = (id) => {
-    user._id===id?navigate("/profile"):navigate(`/profile/${id}`);
+    user._id === id ? navigate("/profile") : navigate(`/profile/${id}`);
     setSearch("");
     setUsers([]);
   };
   const location = useLocation();
-const searchRef = useRef(null);
+  const searchRef = useRef(null);
+
+  const handlefollow = async (id) => {
+    try {
+      const result = await axios.post(
+        `${url}/followapi/follow/${id}`,
+        {},
+        { withCredentials: true },
+      );
+      if (result.data.success) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.user._id === id
+              ? { ...post, isFollowing: true }
+              : post
+          )
+        );
+      }
+    } catch (error) {
+      console.log("Follow request failed ", error);
+      return;
+    }
+  };
+
 
   useEffect(() => {
     if (location.state?.focusSearch) {
       searchRef.current?.focus();
       window.history.replaceState({}, document.title);
     }
+    getallposts();
   }, [location]);
-  
-  const handlesearch=async (e)=>{
+
+  const handlesearch = async (e) => {
     const value = e.target.value;
     setSearch(value);
     try {
@@ -44,7 +84,28 @@ const searchRef = useRef(null);
     } catch (error) {
       console.log(error);
     }
-  }
+  };
+
+  const getTimeAgo = (date) => {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+
+    if (seconds < 60) return "Just now";
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo ago`;
+
+    const years = Math.floor(months / 12);
+    return `${years}y ago`;
+  };
   return (
     <section
       id="Home"
@@ -86,9 +147,7 @@ const searchRef = useRef(null);
                     <h3 className="font-semibold text-sm text-gray-900">
                       {item.username}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      {item.name}
-                    </p>
+                    <p className="text-sm text-gray-500">{item.name}</p>
                   </div>
                 </div>
               ))
@@ -101,33 +160,54 @@ const searchRef = useRef(null);
         )}
       </div>
       <div className="w-full grid grid-cols-2 gap-5 ">
-        {[1, 2,3,4,5].map((post, index) => (
+        {posts.map((post, index) => (
           <div className="bg-white w-full rounded-2xl border border-gray-100 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <img
-                  src="https://i.pravatar.cc/150?img=47"
+                  src={
+                    post.user.profileimage ||
+                    "https://lovemine.in/wp-content/uploads/2024/05/no-dp_16-300x300.webp"
+                  }
                   alt="User"
                   className="w-13 h-13 rounded-full object-cover"
                 />
                 <div>
                   <h3 className="text-base font-semibold text-gray-900">
-                    johndoe
+                    {post.user.username}
                   </h3>
-                  <p className="text-sm text-gray-500">2h ago</p>
+                  <p className="text-sm text-gray-500">
+                    {getTimeAgo(post.createdAt)}
+                  </p>
                 </div>
               </div>
 
-              <button className="p-2 text-gray-700 hover:bg-gray-100 rounded-full">
-                <MoreHorizontal size={23} />
+              <button
+                onClick={() => post.user._id !== user._id?post.isFollowing?navigate(`/profile/${post.user._id}`):handlefollow(post.user._id):navigate("/profile")}
+                className={`px-4 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
+                  post.user._id === user._id || post.isFollowing
+                    ? "bg-gray-100 text-gray-700  hover:bg-gray-200"
+                    : " bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
+                }`}
+              >
+                {post.user._id === user._id || post.isFollowing
+                  ? "View Profile"
+                  : "Follow"}
               </button>
             </div>
             <div className="w-full overflow-hidden rounded-xl">
               <img
-                src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200"
-                alt="Sunset"
+                src={post.image}
                 className="w-full h-[260px] md:h-[350px] object-cover"
               />
+            </div>
+            <div className="px-2 mt-3 flex items-center gap-2 flex-wrap">
+              <p className="text-xs font-semibold uppercase text-gray-400 shrink-0">
+                Caption:
+              </p>
+              <p className="text-sm text-gray-700 break-words">
+                {post.caption}
+              </p>
             </div>
             <div className="flex items-center justify-between mt-4">
               <div className="flex items-center gap-8">
@@ -140,9 +220,21 @@ const searchRef = useRef(null);
                   <span className="text-sm font-medium">23</span>
                 </button>
               </div>
-              <button className="text-gray-700 hover:text-indigo-600 transition">
-                <Bookmark size={27} strokeWidth={2} />
-              </button>
+              <div
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full ${
+                  post.user._id !== user._id
+                    ? post.isFollowing
+                      ? "bg-green-50 text-green-600 border border-green-100"
+                      : "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                    : "bg-orange-50 text-orange-600 border border-orange-100"
+                }`}
+              >
+                {post.user._id !== user._id
+                  ? post.isFollowing
+                    ? "Account Followed"
+                    : "Suggested"
+                  : "Your Post"}
+              </div>
             </div>
           </div>
         ))}
