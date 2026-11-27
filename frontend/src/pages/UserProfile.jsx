@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Camera,Heart,MessageCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import CommentBox from "../components/CommentBox.jsx";
 
 function UserProfile({ user, url }) {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ function UserProfile({ user, url }) {
   const [followings, setFollowings] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [selectedPost,setSelectedPost]=useState(null);
 
   
   const fetchposts=async (id)=>{
@@ -116,9 +118,8 @@ function UserProfile({ user, url }) {
         console.log(error);
       }
     };
-
     fetchprofile();
-  }, [id, url]);
+  }, [id, url, posts]);
   const getTimeAgo = (date) => {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
 
@@ -280,7 +281,7 @@ function UserProfile({ user, url }) {
                           {post.likes.length}
                         </span>
                       </button>
-                      <button className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition">
+                      <button onClick={()=>setSelectedPost(post)} className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition">
                         <MessageCircle size={27} strokeWidth={2} />
                         <span className="text-sm font-medium">
                           {post.comments.length}
@@ -308,6 +309,14 @@ function UserProfile({ user, url }) {
           )}
         </div>
       </div>
+      {selectedPost && (
+        <CommentBox
+          post={selectedPost}
+          user={user}
+          url={url}
+          onClose={() => setSelectedPost(null)}
+        />
+      )}
     </section>
   );
 }

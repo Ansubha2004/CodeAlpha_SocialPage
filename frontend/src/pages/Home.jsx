@@ -8,9 +8,11 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import CommentBox from "../components/CommentBox.jsx";
 
 function Home({ user, url }) {
   const [posts, setPosts] = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
@@ -27,10 +29,8 @@ function Home({ user, url }) {
       if (result.data.success) {
         setPosts((prevPosts) =>
           prevPosts.map((post) =>
-            post._id === id
-              ? { ...post, likes: result.data.likes }
-              : post
-          )
+            post._id === id ? { ...post, likes: result.data.likes } : post,
+          ),
         );
       }
     } catch (error) {
@@ -87,7 +87,7 @@ function Home({ user, url }) {
       window.history.replaceState({}, document.title);
     }
     getallposts();
-  }, [location]);
+  }, [location,posts]);
 
   const handlesearch = async (e) => {
     const value = e.target.value;
@@ -144,7 +144,6 @@ function Home({ user, url }) {
             className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
           />
         </div>
-        {/* Search results */}
         {search.trim() && (
           <div className="absolute left-5 right-5 top-[85%] bg-white rounded-xl shadow-lg border border-gray-100 max-h-80 overflow-y-auto">
             {users.length > 0 ? (
@@ -180,108 +179,122 @@ function Home({ user, url }) {
         )}
       </div>
       <div className="w-full grid grid-cols-2 gap-5 ">
-      {posts.map((post, index) =>{ 
-           const isLiked = post.likes.some(
-            (id) => id.toString() === user._id.toString()
+        {posts.map((post, index) => {
+          const isLiked = post.likes.some(
+            (id) => id.toString() === user._id.toString(),
           );
           return (
-          <div className="bg-white w-full rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src={
-                    post.user.profileimage ||
-                    "https://lovemine.in/wp-content/uploads/2024/05/no-dp_16-300x300.webp"
-                  }
-                  alt="User"
-                  className="w-13 h-13 rounded-full object-cover"
-                />
-                <div>
-                  <h3 className="text-base font-semibold text-gray-900">
-                    {post.user.username}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {getTimeAgo(post.createdAt)}
-                  </p>
+            <div className="bg-white w-full rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={
+                      post.user.profileimage ||
+                      "https://lovemine.in/wp-content/uploads/2024/05/no-dp_16-300x300.webp"
+                    }
+                    alt="User"
+                    className="w-13 h-13 rounded-full object-cover"
+                  />
+                  <div>
+                    <h3 className="text-base font-semibold text-gray-900">
+                      {post.user.username}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {getTimeAgo(post.createdAt)}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <button
-                onClick={() =>
-                  post.user._id !== user._id
-                    ? post.isFollowing
-                      ? navigate(`/profile/${post.user._id}`)
-                      : handlefollow(post.user._id)
-                    : navigate("/profile")
-                }
-                className={`px-4 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
-                  post.user._id === user._id || post.isFollowing
-                    ? "bg-gray-100 text-gray-700  hover:bg-gray-200"
-                    : " bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
-                }`}
-              >
-                {post.user._id === user._id || post.isFollowing
-                  ? "View Profile"
-                  : "Follow"}
-              </button>
-            </div>
-            <div className="w-full overflow-hidden rounded-xl">
-              <img
-                src={post.image}
-                className="w-full h-[260px] md:h-[350px] object-cover"
-              />
-            </div>
-            <div className="px-2 mt-3 flex items-center gap-2 flex-wrap">
-              <p className="text-xs font-semibold uppercase text-gray-400 shrink-0">
-                Caption:
-              </p>
-              <p className="text-sm text-gray-700 break-words">
-                {post.caption}
-              </p>
-            </div>
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-8">
                 <button
-                  onClick={() => likepost(post._id)}
-                  className={`flex items-center gap-2 transition ${
-                    isLiked
-                      ? "text-red-500"
-                      : "text-gray-700 hover:text-red-500"
+                  onClick={() =>
+                    post.user._id !== user._id
+                      ? post.isFollowing
+                        ? navigate(`/profile/${post.user._id}`)
+                        : handlefollow(post.user._id)
+                      : navigate("/profile")
+                  }
+                  className={`px-4 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
+                    post.user._id === user._id || post.isFollowing
+                      ? "bg-gray-100 text-gray-700  hover:bg-gray-200"
+                      : " bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
                   }`}
                 >
-                  <Heart
-                    size={27}
-                    strokeWidth={2}
-                    fill={isLiked ? "currentColor" : "none"}
-                  />
-                  <span className="text-sm font-medium">
-                    {post.likes.length}
-                  </span>
-                </button>
-                <button className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition">
-                  <MessageCircle size={27} strokeWidth={2} />
-                  <span className="text-sm font-medium">{post.comments.length}</span>
+                  {post.user._id === user._id || post.isFollowing
+                    ? "View Profile"
+                    : "Follow"}
                 </button>
               </div>
-              <div
-                className={`text-xs font-semibold px-3 py-1.5 rounded-full ${
-                  post.user._id !== user._id
+              <div className="w-full overflow-hidden rounded-xl">
+                <img
+                  src={post.image}
+                  className="w-full h-[260px] md:h-[350px] object-cover"
+                />
+              </div>
+              <div className="px-2 mt-3 flex items-center gap-2 flex-wrap">
+                <p className="text-xs font-semibold uppercase text-gray-400 shrink-0">
+                  Caption:
+                </p>
+                <p className="text-sm text-gray-700 break-words">
+                  {post.caption}
+                </p>
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center gap-8">
+                  <button
+                    onClick={() => likepost(post._id)}
+                    className={`flex items-center gap-2 transition ${
+                      isLiked
+                        ? "text-red-500"
+                        : "text-gray-700 hover:text-red-500"
+                    }`}
+                  >
+                    <Heart
+                      size={27}
+                      strokeWidth={2}
+                      fill={isLiked ? "currentColor" : "none"}
+                    />
+                    <span className="text-sm font-medium">
+                      {post.likes.length}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedPost(post)}
+                    className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition"
+                  >
+                    <MessageCircle size={27} strokeWidth={2} />
+                    <span className="text-sm font-medium">
+                      {post.comments.length}
+                    </span>
+                  </button>
+                </div>
+                <div
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-full ${
+                    post.user._id !== user._id
+                      ? post.isFollowing
+                        ? "bg-green-50 text-green-600 border border-green-100"
+                        : "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                      : "bg-orange-50 text-orange-600 border border-orange-100"
+                  }`}
+                >
+                  {post.user._id !== user._id
                     ? post.isFollowing
-                      ? "bg-green-50 text-green-600 border border-green-100"
-                      : "bg-indigo-50 text-indigo-600 border border-indigo-100"
-                    : "bg-orange-50 text-orange-600 border border-orange-100"
-                }`}
-              >
-                {post.user._id !== user._id
-                  ? post.isFollowing
-                    ? "Account Followed"
-                    : "Suggested"
-                  : "Your Post"}
+                      ? "Account Followed"
+                      : "Suggested"
+                    : "Your Post"}
+                </div>
               </div>
             </div>
-          </div>
-        )})}
+          );
+        })}
       </div>
+      {selectedPost && (
+        <CommentBox
+          post={selectedPost}
+          user={user}
+          url={url}
+          onClose={() => setSelectedPost(null)}
+        />
+      )}
     </section>
   );
 }

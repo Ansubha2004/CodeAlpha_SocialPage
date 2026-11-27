@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Camera, Heart, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import CommentBox from "../components/CommentBox.jsx";
 import axios from "axios";
 
 function Profile({ user, url }) {
   const navigate = useNavigate();
   const [followers, setFollowers] = useState([]);
   const [followings, setFollowings] = useState([]);
-
+  const [selectedPost, setSelectedPost] = useState(null);
   const [posts, setPosts] = useState([]);
 
   const deletepost = async (id) => {
@@ -106,7 +107,7 @@ function Profile({ user, url }) {
   useEffect(() => {
     fetchfollowerdata(user._id);
     fetchposts();
-  }, [url]);
+  }, [url,posts]);
 
   return (
     <section
@@ -237,7 +238,7 @@ function Profile({ user, url }) {
                           {post.likes.length}
                         </span>
                       </button>
-                      <button className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition">
+                      <button onClick={()=>setSelectedPost(post)} className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition">
                         <MessageCircle size={27} strokeWidth={2} />
                         <span className="text-sm font-medium">
                           {post.comments.length}
@@ -265,6 +266,16 @@ function Profile({ user, url }) {
           )}
         </div>
       </div>
+      {
+        selectedPost &&  (
+          <CommentBox
+            post={selectedPost}
+            user={user}
+            url={url}
+            onClose={() => setSelectedPost(null)}
+          />
+        )
+      }
     </section>
   );
 }

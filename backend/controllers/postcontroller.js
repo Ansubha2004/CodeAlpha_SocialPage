@@ -5,61 +5,61 @@ import followmodel from "../models/followmodel.js";
 
 
 export const createpost = async (req, res) => {
-    try {
-        const { caption } = req.body;
-        if (!req.file) {
-            return res.json({
-                success: false,
-                message: "Image required"
-            })
-        }
-        const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
-
-        const result = await cloudinary.uploader.upload(base64Image, {
-            folder: "post_folder"
-        });
-        const post = await postmodel.create({
-            user: req.user.id,
-            image: result.secure_url,
-            imageId: result.public_id,
-            caption: caption || "",
-        });
-
-        return res.json({
-            success: true,
-            message: "Post created successfully",
-            post
-        });
-
+  try {
+    const { caption } = req.body;
+    if (!req.file) {
+      return res.json({
+        success: false,
+        message: "Image required"
+      })
     }
-    catch (error) {
-        return res.json({
-            success: false,
-            message: "Failed to create post",
-            error
-        })
-    }
+    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+
+    const result = await cloudinary.uploader.upload(base64Image, {
+      folder: "post_folder"
+    });
+    const post = await postmodel.create({
+      user: req.user.id,
+      image: result.secure_url,
+      imageId: result.public_id,
+      caption: caption || "",
+    });
+
+    return res.json({
+      success: true,
+      message: "Post created successfully",
+      post
+    });
+
+  }
+  catch (error) {
+    return res.json({
+      success: false,
+      message: "Failed to create post",
+      error
+    })
+  }
 }
 
 
 export const getuserposts = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const posts = await postmodel.find({ user: id }).populate("user", "-password -imageId -email").sort({ createdAt: -1 });
-        return res.json({
-            success: true,
-            message: "fetched all post of user",
-            posts
-        });
+  try {
+    const { id } = req.params;
+    const posts = await postmodel.find({ user: id }).populate("user", "-password -imageId -email").populate("comments.user", "username profileimage").sort({ createdAt: -1 });
+    return res.json({
+      success: true,
+      message: "fetched all post of user",
+      posts
+    });
 
-    }
-    catch (error) {
-        return res.json({
-            success: false,
-            message: "Error getting user posts",
-            error
-        });
-    }
+  }
+  catch (error) {
+    return res.json({
+      success: false,
+      message: "Error getting user posts",
+      error
+    });
+  }
 }
 
 export const getallposts = async (req, res) => {
@@ -116,6 +116,9 @@ export const deletepost = async (req, res) => {
         message: "Unauthorized",
       });
     }
+    if (post.imageId) {
+      await cloudinary.uploader.destroy(post.imageId);
+    }
     await postmodel.findByIdAndDelete(id);
     return res.json({
       success: true,
@@ -130,20 +133,19 @@ export const deletepost = async (req, res) => {
 };
 
 
-export const likepost=async (req,res)=>{
-  try{
-    const {id}=req.params;
-    const userid=req.user.id;
-    const post=await postmodel.findById(id);
-    if(!post)
-    {
+export const likepost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userid = req.user.id;
+    const post = await postmodel.findById(id);
+    if (!post) {
       return res.json({
         success: false,
         message: "Post not found",
       });
     }
 
-    const existinglike=post.likes.includes(userid);
+    const existinglike = post.likes.includes(userid);
     if (existinglike) {
       post.likes.pull(userid);
     } else {
@@ -153,18 +155,61 @@ export const likepost=async (req,res)=>{
     await post.save();
 
     return res.json({
-      success:true,
-      message:existinglike?"Post Unliked":"Post Liked",
-      likes:post.likes,
-      isLiked:!!existinglike
+      success: true,
+      message: existinglike ? "Post Unliked" : "Post Liked",
+      likes: post.likes,
+      isLiked: !!existinglike
     })
   }
-  catch(error)
-  {
+  catch (error) {
     return res.json({
-      success:false,
-      message:"Lik post api issue",
-      error:error.message
+      success: false,
+      message: "Liked post api issue",
+      error: error.message
+    })
+  }
+}
+
+
+export const addcomment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+
+    if (!text) {
+      return res.json({
+        success: false,
+        message: "No Comment posted"
+      })
+    }
+
+    const post = await postmodel.findById(id);
+    if (!post)
+      return res.json({
+        success: false,
+        message: "Post not found"
+      })
+
+      post.comments.push({
+        user:req.user.id,
+        text:text.trim()
+      })
+
+      await post.save();
+      await post.populate("comments.user","username profileimage");
+
+      return res.json({
+        success: true,
+        message: "Comment posted successfully",
+        comments: post.comments
+      });
+
+  }
+  catch (error) {
+    return res.json({
+      success: false,
+      message: "Error in adding comment",
+      error
     })
   }
 }
