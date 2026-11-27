@@ -69,7 +69,7 @@ Built using the MERN stack, PICYFI provides a responsive interface and interacti
 ### 1. Clone the Repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/Ansubha2004/CodeAlpha_SocialPage.git
 cd PICYFI
 ```
 
@@ -83,7 +83,7 @@ npm install
 Create a `.env` file inside the backend directory:
 
 ```env
-PORT=5000
+PORT=5001
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 
